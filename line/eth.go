@@ -5,10 +5,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	types2 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/marblebank/claws"
-	"github.com/marblebank/claws/addr"
-	"github.com/marblebank/config"
-	"github.com/marblebank/types"
+
+	"../../claws"
+	"../addr"
 	"github.com/opentracing/opentracing-go/log"
 )
 
