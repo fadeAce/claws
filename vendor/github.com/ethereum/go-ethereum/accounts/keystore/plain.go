@@ -60,6 +60,6 @@ func (ks keyStorePlain) JoinPath(filename string) string {
 	return filepath.Join(ks.keysDirPath, filename)
 }
 
-func NewKeyStorePlain(path string) *keyStorePlain {
+func NewKeyStorePlain(path string) *keyStorePlain{
 	return &keyStorePlain{path}
 }
