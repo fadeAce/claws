@@ -1,6 +1,6 @@
 package claws
 
-import "github.com/marblebank/types"
+import "github.com/fadeAce/claws/types"
 
 // gate have to access chain to get specific data by invoking RPC nodes
 

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/marblebank/types"
+	"github.com/fadeAce/claws/types"
 	"github.com/pborman/uuid"
 
 	crand "crypto/rand"
@@ -77,7 +77,7 @@ func ethAddr() (Addr, error) {
 	if err != nil {
 		return nil, err
 	}
-	id := uuid.NewRandom()
+	id := []byte(uuid.NewRandom())
 	key := &keystore.Key{
 		Id:         id,
 		Address:    crypto.PubkeyToAddress(privateKeyECDSA.PublicKey),

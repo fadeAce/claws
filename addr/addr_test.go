@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/mobile"
-	"github.com/marblebank/types"
+	"github.com/fadeAce/claws/types"
 	"log"
 	"strings"
 	"testing"

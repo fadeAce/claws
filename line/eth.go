@@ -5,6 +5,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	types2 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/fadeAce/claws/types"
 
 	"../../claws"
 	"../addr"
@@ -12,7 +13,7 @@ import (
 )
 
 type ethWallet struct {
-	conf *config.Marble
+	conf *types.Marble
 	ctx  context.Context
 	conn *ethclient.Client
 }
@@ -146,7 +147,7 @@ func (e *ethWallet) Type() string {
 	return types.COIN_ETH
 }
 
-func NewEthWallet(conf *config.Marble, ctx context.Context, conn *ethclient.Client) ethWallet {
+func NewEthWallet(conf *types.Marble, ctx context.Context, conn *ethclient.Client) ethWallet {
 	res := ethWallet{
 		conf: conf,
 		ctx:  ctx,
