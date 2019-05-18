@@ -20,7 +20,7 @@ type Info struct {
 type Marble struct {
 	Ctx     context.Context
 	Version string `yaml:"version"`
-	// The configuration required for a matrix server.
+	// The configuration represent coin.
 	Coins []struct {
 		// The estimate fee for this type of coin. This is usually represented by it's own coin convention.
 		Fee string `yaml:"fee"`

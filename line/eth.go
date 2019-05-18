@@ -155,3 +155,13 @@ func NewEthWallet(conf *types.Marble, ctx context.Context, conn *ethclient.Clien
 	}
 	return res
 }
+
+func (e *ethWallet) GetRes() string {
+	//e.conn.TransactionInBlock()
+	//b, err := e.conn.BlockByNumber()
+	//txs := b.Transactions()
+	//for _, v := range txs {
+	//	v.
+	//}
+	return types.COIN_ETH
+}
