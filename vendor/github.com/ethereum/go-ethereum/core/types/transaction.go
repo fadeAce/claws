@@ -271,6 +271,11 @@ func (s Transactions) GetRlp(i int) []byte {
 	return enc
 }
 
+// GetRlp implements Rlpable and returns the i'th element of s in rlp.
+func (s *Transaction) GetFromUnsafe() common.Address {
+	return s.from.Load().(sigCache).from
+}
+
 // TxDifference returns a new set which is the difference between a and b.
 func TxDifference(a, b Transactions) Transactions {
 	keep := make(Transactions, 0, len(a))

@@ -1,0 +1,21 @@
+version: 0.0.1
+
+coins:
+   -
+      fee: 21000
+      fee_coin: eth
+      full_name: ethereum
+      short_name: eth
+      type: eth
+      decimal: 0
+      url: http://127.0.0.1:8545
+      interval: 30
+   -
+      fee: 33
+      fee_coin: btc
+      full_name: bitcoin
+      short_name: btc
+      type: btc
+      decimal: 0
+      url: http://127.0.0.1:18332
+      interval: 600

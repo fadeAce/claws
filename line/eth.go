@@ -6,14 +6,14 @@ import (
 	types2 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fadeAce/claws/types"
+	"math/big"
 
-	"../../claws"
-	"../addr"
+	"github.com/fadeAce/claws/addr"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type ethWallet struct {
-	conf *types.Marble
+	conf *types.Claws
 	ctx  context.Context
 	conn *ethclient.Client
 }
@@ -23,15 +23,34 @@ type ethBundle struct {
 }
 
 type ethTXN struct {
-	Hash string
+	from   string
+	to     string
+	Hash   string
+	amount *big.Int
+	fee    *big.Int
 }
 
 func (etxn *ethTXN) HexStr() string {
-	return ""
+	return etxn.Hash
 }
 
 func (etxn *ethTXN) SetStr(res string) {
 	etxn.Hash = res
+}
+
+func (etxn *ethTXN) FromStr() string {
+	return etxn.from
+}
+
+func (etxn *ethTXN) AmountStr() string {
+	return etxn.amount.String()
+}
+func (etxn *ethTXN) FeeStr() string {
+	return etxn.fee.String()
+}
+
+func (etxn *ethTXN) ToStr() string {
+	return etxn.to
 }
 
 func (eb *ethBundle) InitAddr(pub, prv string) error {
@@ -62,7 +81,7 @@ func (e *ethWallet) InitWallet() {
 }
 
 // return new addr
-func (e *ethWallet) NewAddr() claws.Bundle {
+func (e *ethWallet) NewAddr() types.Bundle {
 	ad, err := addr.GenerateAddr(e.Type())
 	if err != nil {
 		return nil
@@ -78,7 +97,7 @@ func (e *ethWallet) NewAddr() claws.Bundle {
 // return new addr
 func (e *ethWallet) BuildBundle(
 	prv, pub, addr string,
-) claws.Bundle {
+) types.Bundle {
 	res := &ethBundle{
 		pub: pub,
 		prv: prv,
@@ -90,7 +109,7 @@ func (e *ethWallet) BuildBundle(
 // return new addr
 func (e *ethWallet) BuildTxn(
 	tx string,
-) claws.TXN {
+) types.TXN {
 	return &ethTXN{
 		Hash: tx,
 	}
@@ -114,12 +133,12 @@ func (e *ethWallet) Info() *types.Info {
 }
 
 // withdraw to certain place
-func (e *ethWallet) Withdraw(addr claws.Bundle) *types.TxnInfo {
+func (e *ethWallet) Withdraw(addr types.Bundle) *types.TxnInfo {
 	return nil
 }
 
 // seek for tx , keep track it
-func (e *ethWallet) Seek(txn claws.TXN) bool {
+func (e *ethWallet) Seek(txn types.TXN) bool {
 	// seek the txn hash of it
 	hash := txn.HexStr()
 	hs := common.HexToHash(hash)
@@ -135,7 +154,7 @@ func (e *ethWallet) Seek(txn claws.TXN) bool {
 }
 
 // seek for tx , keep track it
-func (e *ethWallet) Balance(bundle claws.Bundle) (string, error) {
+func (e *ethWallet) Balance(bundle types.Bundle) (string, error) {
 	add := bundle.AddressStr()
 	address := common.HexToAddress(add)
 	balance, err := e.conn.BalanceAt(e.ctx, address, nil)
@@ -147,7 +166,7 @@ func (e *ethWallet) Type() string {
 	return types.COIN_ETH
 }
 
-func NewEthWallet(conf *types.Marble, ctx context.Context, conn *ethclient.Client) ethWallet {
+func NewEthWallet(conf *types.Claws, ctx context.Context, conn *ethclient.Client) ethWallet {
 	res := ethWallet{
 		conf: conf,
 		ctx:  ctx,
@@ -156,12 +175,29 @@ func NewEthWallet(conf *types.Marble, ctx context.Context, conn *ethclient.Clien
 	return res
 }
 
-func (e *ethWallet) GetRes() string {
-	//e.conn.TransactionInBlock()
-	//b, err := e.conn.BlockByNumber()
-	//txs := b.Transactions()
-	//for _, v := range txs {
-	//	v.
-	//}
-	return types.COIN_ETH
+func (e *ethWallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TXN, err error) {
+	b, err := e.conn.BlockByNumber(ctx, num)
+	if err != nil {
+		return nil, err
+	}
+	txs := b.Transactions()
+	for _, v := range txs {
+		f := v.GetFromUnsafe().String()
+		txn := &ethTXN{
+			from:   f,
+			Hash:   v.Hash().String(),
+			fee:    new(big.Int).Mul(new(big.Int).SetUint64(v.Gas()), v.GasPrice()),
+			amount: v.Value(),
+		}
+		if v.To() != nil {
+			txn.to = v.To().String()
+
+			res = append(res, txn)
+		} else {
+			txn.to = ""
+			res = append(res, txn)
+		}
+	}
+
+	return
 }

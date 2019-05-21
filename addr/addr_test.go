@@ -347,3 +347,9 @@ func TestEthReceipt(t *testing.T) {
 		fmt.Println("success !")
 	}
 }
+
+func TestEthWallet(t *testing.T) {
+	//cli := claws.Wallet()
+}
+
+

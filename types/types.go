@@ -17,7 +17,7 @@ type Info struct {
 	GapLimit     float64
 }
 
-type Marble struct {
+type Claws struct {
 	Ctx     context.Context
 	Version string `yaml:"version"`
 	// The configuration represent coin.
@@ -57,4 +57,33 @@ type TxnInfo struct {
 	TxHash string
 	// "btc" "eth" "eth-c" from const
 	TxType string
+}
+
+// Addr marks for interface based addr
+type Bundle interface {
+	InitAddr(pub, prv string) error
+	// return public key represented by hex encoding
+	HexPubStr() string
+	// return private key represented by hex encoding
+	HexPrvStr() string
+	// return address in string
+	AddressStr() string
+}
+
+type TXN interface {
+	HexStr() string
+	SetStr(res string)
+	FromStr() string
+	ToStr() string
+	FeeStr() string
+	AmountStr() string
+}
+
+type SeekInfo struct {
+}
+
+type WalletInfo struct {
+}
+
+type Require struct {
 }
