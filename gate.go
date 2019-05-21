@@ -72,14 +72,21 @@ func (e *ethBuilder) Build() Wallet {
 
 // there is a list of coins to be initiated which make up the settings
 func setupGate(typ string, conf *types.Claws) WalletBuilder {
+	// f returns the URL represented RPC node
+	f := func(typ string) string {
+		for _, v := range conf.Coins {
+			if v.CoinType == typ {
+				return v.Url
+			}
+		}
+		return ""
+	}
 	switch typ {
 	case types.COIN_BTC:
 		return nil
 	case types.COIN_ETH:
 		ebuilder := &ethBuilder{config: conf}
-		// gate do connect to RPC nodes and share it's connection
-		//cli, err := geth.NewEthereumClient("http://127.0.0.1:8545")
-		cli, err := ethclient.Dial("http://127.0.0.1:8545")
+		cli, err := ethclient.Dial(f(types.COIN_ETH))
 		if err != nil {
 			fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
 		} else {

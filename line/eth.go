@@ -115,22 +115,6 @@ func (e *ethWallet) BuildTxn(
 	}
 }
 
-func (e *ethWallet) Info() *types.Info {
-	// filter config for wallet
-	for _, v := range e.conf.Coins {
-		info := &types.Info{}
-		if e.Type() == v.CoinType {
-			info.Fee = v.Fee
-			info.FeeCoin = v.FeeCoin
-			info.Name = v.CoinType
-			info.Decimal = v.Decimal
-			info.DisplayShort = v.ShortName
-			info.Display = v.FullName
-		}
-		return info
-	}
-	return nil
-}
 
 // withdraw to certain place
 func (e *ethWallet) Withdraw(addr types.Bundle) *types.TxnInfo {

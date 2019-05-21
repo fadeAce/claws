@@ -32,8 +32,6 @@ type Wallet interface {
 	Withdraw(addr types.Bundle) *types.TxnInfo
 	// seek for tx , keep track it
 	Seek(txn types.TXN) bool
-	// Info
-	Info() *types.Info
 
 	// balance
 	Balance(bundle types.Bundle) (string, error)
