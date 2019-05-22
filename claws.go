@@ -38,4 +38,7 @@ type Wallet interface {
 
 	// txs in block
 	UnfoldTxs(ctx context.Context, num *big.Int) ([]types.TXN, error)
+
+	// notify head is a blocked invoke
+	NotifyHead(ctx context.Context, f func(num *big.Int)) error
 }

@@ -7,12 +7,14 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fadeAce/claws/types"
 	"math/big"
+	"sync"
 
 	"github.com/fadeAce/claws/addr"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type ethWallet struct {
+	once sync.Once
 	conf *types.Claws
 	ctx  context.Context
 	conn *ethclient.Client
@@ -115,7 +117,6 @@ func (e *ethWallet) BuildTxn(
 	}
 }
 
-
 // withdraw to certain place
 func (e *ethWallet) Withdraw(addr types.Bundle) *types.TxnInfo {
 	return nil
@@ -183,5 +184,20 @@ func (e *ethWallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TX
 		}
 	}
 
+	return
+}
+
+func (e *ethWallet) NotifyHead(ctx context.Context, f func(num *big.Int)) (err error) {
+	ch := make(chan *types2.Header)
+	e.once.Do(func() {
+		_, err = e.conn.SubscribeNewHead(ctx, ch)
+		if err != nil {
+			return
+		}
+		for {
+			head := <-ch
+			f(head.Number)
+		}
+	})
 	return
 }

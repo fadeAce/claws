@@ -30,3 +30,20 @@ func TestWalletBase(t *testing.T) {
 		fmt.Println(" fee ", v.FeeStr(), " amount ", v.AmountStr())
 	}
 }
+
+func TestEventBase(t *testing.T) {
+	cfg, err := ioutil.ReadFile("./claws.yml")
+	if cfg == nil || err != nil {
+		panic("shut down with no configuration")
+		return
+	}
+	var conf types.Claws
+	err = yaml.Unmarshal(cfg, &conf)
+	// first of all setup gate
+	SetupGate(&conf)
+	wallet := Builder.BuildWallet("eth")
+
+	wallet.NotifyHead(conf.Ctx, func(num *big.Int) {
+		fmt.Println(num)
+	})
+}
