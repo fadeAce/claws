@@ -5,12 +5,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	types2 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/fadeAce/claws/types"
 	"math/big"
 	"sync"
 
 	"github.com/fadeAce/claws/addr"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type ethWallet struct {
@@ -129,7 +129,7 @@ func (e *ethWallet) Seek(txn types.TXN) bool {
 	hs := common.HexToHash(hash)
 	reciept, err := e.conn.TransactionReceipt(e.ctx, hs)
 	if err != nil {
-		log.Error(err)
+		log.Error("error", err)
 		return false
 	}
 	if reciept.Status == types2.ReceiptStatusSuccessful {
