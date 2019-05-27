@@ -41,4 +41,8 @@ type Wallet interface {
 
 	// notify head is a blocked invoke
 	NotifyHead(ctx context.Context, f func(num *big.Int)) error
+
+	// Info used for info scan gap limit
+	Info() *types.Info
+
 }

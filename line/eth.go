@@ -201,3 +201,8 @@ func (e *ethWallet) NotifyHead(ctx context.Context, f func(num *big.Int)) (err e
 	})
 	return
 }
+
+
+func (e *ethWallet) Info() (info *types.Info) {
+	return &types.Info{}
+}
