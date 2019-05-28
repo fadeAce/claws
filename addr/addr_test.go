@@ -360,8 +360,8 @@ func TestEthWallet(t *testing.T) {
 		fmt.Println("create new ethereum rpc client success")
 	}
 
-	data := "0x70A08231" + "000000000000000000000000" + "F03A492FA3cE79D99B9613aDD1017448a83810F1"
-	to := common.HexToAddress("46cFE958951A137Db6d055ef06cE97829c2a8139")
+	data := "70a08231" + "000000000000000000000000" + "f03a492fa3ce79d99b9613add1017448a83810f1"
+	to := common.HexToAddress("46cfe958951a137db6d055ef06ce97829c2a8139")
 	res, err := client.CallContract(context.TODO(), ethereum.CallMsg{
 		To:       &to,
 		Data:     []byte(data),
