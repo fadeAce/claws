@@ -2,6 +2,7 @@ package addr
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum"
 	types2 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
@@ -349,7 +350,24 @@ func TestEthReceipt(t *testing.T) {
 }
 
 func TestEthWallet(t *testing.T) {
-	//cli := claws.Wallet()
+	client, err := ethclient.Dial("http://127.0.0.1:8546")
+	if err != nil {
+		fmt.Println(err)
+	}
+	if err != nil {
+		fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
+	} else {
+		fmt.Println("create new ethereum rpc client success")
+	}
+
+	data := "0x70A08231" + "000000000000000000000000" + "F03A492FA3cE79D99B9613aDD1017448a83810F1"
+	to := common.HexToAddress("46cFE958951A137Db6d055ef06cE97829c2a8139")
+	res, err := client.CallContract(context.TODO(), ethereum.CallMsg{
+		To:       &to,
+		Data:     []byte(data),
+	}, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(string(res))
 }
-
-

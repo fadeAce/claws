@@ -5,6 +5,7 @@ import "context"
 const (
 	COIN_BTC = "btc"
 	COIN_ETH = "eth"
+	COIN_ERC20 = "erc20"
 )
 
 type Info struct {
