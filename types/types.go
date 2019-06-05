@@ -3,8 +3,8 @@ package types
 import "context"
 
 const (
-	COIN_BTC = "btc"
-	COIN_ETH = "eth"
+	COIN_BTC   = "btc"
+	COIN_ETH   = "eth"
 	COIN_ERC20 = "erc20"
 )
 
@@ -22,13 +22,15 @@ type Claws struct {
 	Ctx     context.Context
 	Version string `yaml:"version"`
 	// The configuration represent coin.
-	Coins []struct {
-		// Type of coin matched DB.
-		CoinType string `yaml:"type"`
-		// RPC location is configured to wallet builder
-		// like 127.0.0.1:8545
-		Url string `yml:"url"`
-	} `yaml:"coins"`
+	Coins []Coins `yaml:"coins"`
+}
+
+type Coins struct {
+	// Type of coin matched DB.
+	CoinType string `yaml:"type"`
+	// RPC location is configured to wallet builder
+	// like 127.0.0.1:8545
+	Url string `yml:"url"`
 }
 
 type TxnInfo struct {
