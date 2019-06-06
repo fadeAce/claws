@@ -40,11 +40,16 @@ func (b *builder) BuildWallet(typ string) Wallet {
 }
 
 // this is based on cfg itself, it would load all config to make intersection with code pre-define
-func SetupGate(conf *types.Claws) {
+func SetupGate(conf *types.Claws, wildcard map[string]WalletBuilder) {
 	rep := make(map[string]WalletBuilder)
 	for _, v := range conf.Coins {
+		var builder WalletBuilder
 		//rep[v.CoinType] =
-		builder := setupGate(v.CoinType, conf)
+		if target, exist := wildcard[v.CoinType]; exist {
+			builder = target
+		} else {
+			builder = setupGate(v.CoinType, conf)
+		}
 		if builder != nil {
 			rep[v.CoinType] = builder
 		}

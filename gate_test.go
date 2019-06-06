@@ -18,7 +18,7 @@ func TestWalletBase(t *testing.T) {
 	var conf types.Claws
 	err = yaml.Unmarshal(cfg, &conf)
 	// first of all setup gate
-	SetupGate(&conf)
+	SetupGate(&conf, nil)
 	wallet := Builder.BuildWallet("eth")
 	b := wallet.NewAddr()
 	fmt.Println(b)
@@ -40,7 +40,7 @@ func TestEventBase(t *testing.T) {
 	var conf types.Claws
 	err = yaml.Unmarshal(cfg, &conf)
 	// first of all setup gate
-	SetupGate(&conf)
+	SetupGate(&conf, nil)
 	wallet := Builder.BuildWallet("eth")
 
 	wallet.NotifyHead(conf.Ctx, func(num *big.Int) {
