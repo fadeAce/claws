@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"os"
+	"time"
 
 	"bufio"
 	"bytes"
@@ -351,6 +352,7 @@ func TestEthReceipt(t *testing.T) {
 
 func TestEthWallet(t *testing.T) {
 	client, err := ethclient.Dial("http://127.0.0.1:8546")
+	client.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -363,11 +365,43 @@ func TestEthWallet(t *testing.T) {
 	data := "70a08231" + "000000000000000000000000" + "f03a492fa3ce79d99b9613add1017448a83810f1"
 	to := common.HexToAddress("46cfe958951a137db6d055ef06ce97829c2a8139")
 	res, err := client.CallContract(context.TODO(), ethereum.CallMsg{
-		To:       &to,
-		Data:     []byte(data),
+		To:   &to,
+		Data: []byte(data),
 	}, nil)
 	if err != nil {
 		t.Error(err)
 	}
 	fmt.Println(string(res))
+}
+
+func TestChNotify(t *testing.T) {
+	ch := make(chan string)
+
+	go func() {
+		s := <-ch
+		fmt.Println("1 :", s)
+	}()
+	go func() {
+		s := <-ch
+		fmt.Println("2 :", s)
+	}()
+	time.Sleep(time.Second)
+	ch <- "go"
+}
+
+func TestDialCtx(t *testing.T) {
+	ctx := context.TODO()
+	client, err := ethclient.DialContext(ctx, "ws://127.0.0.1:8546")
+	if err != nil {
+		fmt.Println(err)
+	}
+	if err != nil {
+		fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
+	} else {
+		fmt.Println("create new ethereum rpc client success")
+	}
+	fmt.Println(client.NetworkID(ctx))
+	time.Sleep(20 * time.Second)
+	fmt.Println("done", client)
+	fmt.Println(client.NetworkID(ctx))
 }

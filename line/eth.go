@@ -18,6 +18,8 @@ type ethWallet struct {
 	conf *types.Claws
 	ctx  context.Context
 	conn *ethclient.Client
+
+	//gasprice gasprice.Config
 }
 
 type ethBundle struct {
