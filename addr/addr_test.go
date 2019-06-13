@@ -210,7 +210,7 @@ func TestSendEth(t *testing.T) {
 }
 
 func TestEstimate(t *testing.T) {
-	cli, err := geth.NewEthereumClient("http://127.0.0.1:8545")
+	cli, err := geth.NewEthereumClient("ws://127.0.0.1:8546")
 	if err != nil {
 		fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
 	} else {
@@ -401,6 +401,15 @@ func TestDialCtx(t *testing.T) {
 		fmt.Println("create new ethereum rpc client success")
 	}
 	fmt.Println(client.NetworkID(ctx))
+	p, err := client.SuggestGasPrice(ctx)
+	fmt.Println(p.String())
+	if err != nil {
+		if strings.Contains(err.Error(), "closed") ||
+			strings.Contains(err.Error(), "network connection") {
+			// reconnect here
+
+		}
+	}
 	time.Sleep(20 * time.Second)
 	fmt.Println("done", client)
 	fmt.Println(client.NetworkID(ctx))
