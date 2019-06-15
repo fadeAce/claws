@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/fadeAce/claws/line"
 	"github.com/fadeAce/claws/types"
-
+	"math/big"
+	"strings"
 	"sync"
+	"time"
 )
 
 // this gate is for matching cgate at claws
@@ -64,15 +68,22 @@ type ethBuilder struct {
 	config *types.Claws
 
 	// connection to nodes
-	client *ethclient.Client
+	client *line.EthConn
+
+	url string
+
+	gasprice *string
+
 	// todo: cancel of ctx or disconnection would trigger a recover of network
 	ctx context.Context
+
+	notiCh chan interface{}
 }
 
 func (e *ethBuilder) Build() Wallet {
 	ctx := e.ctx
-	ethWallet := line.NewEthWallet(e.config, ctx, e.client)
-	return &ethWallet
+	ethWallet := line.NewEthWallet(e.config, ctx, e.client, e.notiCh)
+	return ethWallet
 }
 
 // there is a list of coins to be initiated which make up the settings
@@ -90,16 +101,61 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 	case types.COIN_BTC:
 		return nil
 	case types.COIN_ETH:
-		ebuilder := &ethBuilder{config: conf}
+		ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{})}
 		cli, err := ethclient.Dial(f(types.COIN_ETH))
+		ctx := context.TODO()
+		ebuilder.ctx = ctx
 		if err != nil {
 			fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
 		} else {
 			fmt.Println("create new ethereum rpc client success")
 		}
-		etx := context.TODO()
-		ebuilder.ctx = etx
-		ebuilder.client = cli
+		go func() {
+			for {
+				cli = ebuilder.client.Conn
+				var gas *big.Int
+				if cli != nil {
+					gas, err = cli.SuggestGasPrice(ctx)
+					if err != nil {
+						fmt.Println(err.Error())
+						if strings.Contains(err.Error(), "closed") ||
+							strings.Contains(err.Error(), "network connection") {
+							// reconnect here
+							cli, err = ethclient.Dial(f(types.COIN_ETH))
+							if err != nil {
+								log.Error("error when reconnect source URL")
+							} else {
+								go func() {
+									ebuilder.notiCh <- struct{}{}
+								}()
+							}
+							log.Info("reconnected client")
+							ebuilder.client.Conn = cli
+						}
+					}
+				} else {
+					cli, err = ethclient.Dial(f(types.COIN_ETH))
+					if err != nil {
+						log.Error("error when reconnect source URL")
+					} else {
+						go func() {
+							ebuilder.notiCh <- struct{}{}
+						}()
+					}
+					ebuilder.client.Conn = cli
+					time.Sleep(20 * time.Second)
+					continue
+				}
+				time.Sleep(20 * time.Second)
+				gasStr := gas.String()
+				if ebuilder.gasprice == nil || *ebuilder.gasprice != gasStr {
+					ebuilder.gasprice = &gasStr
+					log.Info("updated eth gas price to ", gasStr)
+				}
+			}
+		}()
+
+		ebuilder.client = &line.EthConn{cli}
 		return ebuilder
 	}
 	return nil

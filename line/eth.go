@@ -3,7 +3,7 @@ package line
 import (
 	"context"
 	"github.com/ethereum/go-ethereum/common"
-	types2 "github.com/ethereum/go-ethereum/core/types"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/fadeAce/claws/types"
@@ -17,9 +17,13 @@ type ethWallet struct {
 	once sync.Once
 	conf *types.Claws
 	ctx  context.Context
-	conn *ethclient.Client
+	conn *EthConn
 
-	//gasprice gasprice.Config
+	updateCh chan interface{}
+}
+
+type EthConn struct {
+	Conn *ethclient.Client
 }
 
 type ethBundle struct {
@@ -98,6 +102,10 @@ func (e *ethWallet) NewAddr() types.Bundle {
 	return res
 }
 
+func NewConn(client *ethclient.Client) *EthConn {
+	return &EthConn{client}
+}
+
 // return new addr
 func (e *ethWallet) BuildBundle(
 	prv, pub, addr string,
@@ -129,12 +137,12 @@ func (e *ethWallet) Seek(txn types.TXN) bool {
 	// seek the txn hash of it
 	hash := txn.HexStr()
 	hs := common.HexToHash(hash)
-	reciept, err := e.conn.TransactionReceipt(e.ctx, hs)
+	reciept, err := e.conn.Conn.TransactionReceipt(e.ctx, hs)
 	if err != nil {
 		log.Error("error", err)
 		return false
 	}
-	if reciept.Status == types2.ReceiptStatusSuccessful {
+	if reciept.Status == ethTypes.ReceiptStatusSuccessful {
 		return true
 	}
 	return false
@@ -144,7 +152,7 @@ func (e *ethWallet) Seek(txn types.TXN) bool {
 func (e *ethWallet) Balance(bundle types.Bundle) (string, error) {
 	add := bundle.AddressStr()
 	address := common.HexToAddress(add)
-	balance, err := e.conn.BalanceAt(e.ctx, address, nil)
+	balance, err := e.conn.Conn.BalanceAt(e.ctx, address, nil)
 	return balance.String(), err
 }
 
@@ -153,17 +161,18 @@ func (e *ethWallet) Type() string {
 	return types.COIN_ETH
 }
 
-func NewEthWallet(conf *types.Claws, ctx context.Context, conn *ethclient.Client) ethWallet {
+func NewEthWallet(conf *types.Claws, ctx context.Context, conn *EthConn, updateCh chan interface{}) *ethWallet {
 	res := ethWallet{
 		conf: conf,
 		ctx:  ctx,
 		conn: conn,
+		updateCh: updateCh,
 	}
-	return res
+	return &res
 }
 
 func (e *ethWallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TXN, err error) {
-	b, err := e.conn.BlockByNumber(ctx, num)
+	b, err := e.conn.Conn.BlockByNumber(ctx, num)
 	if err != nil {
 		return nil, err
 	}
@@ -190,20 +199,35 @@ func (e *ethWallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TX
 }
 
 func (e *ethWallet) NotifyHead(ctx context.Context, f func(num *big.Int)) (err error) {
-	ch := make(chan *types2.Header)
+	ch := make(chan *ethTypes.Header)
+	// cancel is an inner trigger
+	ctxIn, cancel := context.WithCancel(context.TODO())
 	e.once.Do(func() {
-		_, err = e.conn.SubscribeNewHead(ctx, ch)
+		_, err = e.conn.Conn.SubscribeNewHead(ctxIn, ch)
 		if err != nil {
 			return
 		}
 		for {
-			head := <-ch
-			f(head.Number)
+			select {
+			case head := <-ch:
+				f(head.Number)
+			case <-e.updateCh:
+				// updateCh pass a signal for reconnect
+				ctxIn = context.TODO()
+				ctxIn, cancel = context.WithCancel(context.TODO())
+				_, err = e.conn.Conn.SubscribeNewHead(ctxIn, ch)
+				if err != nil {
+					return
+				}
+			case <-ctx.Done():
+				// done all
+				cancel()
+			}
+
 		}
 	})
 	return
 }
-
 
 func (e *ethWallet) Info() (info *types.Info) {
 	return &types.Info{}
