@@ -2,12 +2,16 @@ package line
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/fadeAce/claws/types"
 	"math/big"
+	"strings"
 	"sync"
 
 	"github.com/fadeAce/claws/addr"
@@ -18,6 +22,8 @@ type ethWallet struct {
 	conf *types.Claws
 	ctx  context.Context
 	conn *EthConn
+
+	gasPrice *string
 
 	updateCh chan interface{}
 }
@@ -113,7 +119,7 @@ func (e *ethWallet) BuildBundle(
 	res := &ethBundle{
 		pub: pub,
 		prv: prv,
-		add: addr,
+		add: strings.Trim(addr," "),
 	}
 	return res
 }
@@ -161,12 +167,13 @@ func (e *ethWallet) Type() string {
 	return types.COIN_ETH
 }
 
-func NewEthWallet(conf *types.Claws, ctx context.Context, conn *EthConn, updateCh chan interface{}) *ethWallet {
+func NewEthWallet(conf *types.Claws, ctx context.Context, conn *EthConn, updateCh chan interface{}, gasPrice *string) *ethWallet {
 	res := ethWallet{
-		conf: conf,
-		ctx:  ctx,
-		conn: conn,
+		conf:     conf,
+		ctx:      ctx,
+		conn:     conn,
 		updateCh: updateCh,
+		gasPrice: gasPrice,
 	}
 	return &res
 }
@@ -231,4 +238,47 @@ func (e *ethWallet) NotifyHead(ctx context.Context, f func(num *big.Int)) (err e
 
 func (e *ethWallet) Info() (info *types.Info) {
 	return &types.Info{}
+}
+
+// Send send txn using bundle built for given token
+func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (err error) {
+	gasP := new(big.Int)
+	if e.gasPrice != nil {
+		gasP.SetString(*e.gasPrice, 10)
+	} else {
+		// 1 Gwei
+		gasP.SetString("1000000000", 10)
+	}
+
+	toAddress := common.HexToAddress(to.AddressStr())
+
+	amountBig := new(big.Int)
+	amountBig.SetString(amount, 10)
+
+	// make tx 10w for txn
+	tx := ethTypes.NewTransaction(option.Nonce, toAddress, amountBig, 100000, gasP, nil)
+
+	sb, err := hex.DecodeString(option.Secret)
+	if err != nil {
+		return err
+	}
+	psk, err := crypto.ToECDSA(sb)
+	if err != nil {
+		return err
+	}
+	signTx, err := ethTypes.SignTx(tx, &ethTypes.HomesteadSigner{}, psk)
+	if err != nil {
+		return err
+	}
+	fmt.Println(signTx.Hash())
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = e.conn.Conn.SendTransaction(context.TODO(), signTx)
+
+	err = e.conn.Conn.SendTransaction(ctx, signTx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

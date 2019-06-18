@@ -45,4 +45,6 @@ type Wallet interface {
 	// Info used for info scan gap limit
 	Info() *types.Info
 
+	// send txn
+	Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (err error)
 }

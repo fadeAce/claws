@@ -82,7 +82,7 @@ type ethBuilder struct {
 
 func (e *ethBuilder) Build() Wallet {
 	ctx := e.ctx
-	ethWallet := line.NewEthWallet(e.config, ctx, e.client, e.notiCh)
+	ethWallet := line.NewEthWallet(e.config, ctx, e.client, e.notiCh, e.gasprice)
 	return ethWallet
 }
 
@@ -101,7 +101,7 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 	case types.COIN_BTC:
 		return nil
 	case types.COIN_ETH:
-		ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{})}
+		ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{}, 1)}
 		cli, err := ethclient.Dial(f(types.COIN_ETH))
 		ctx := context.TODO()
 		ebuilder.ctx = ctx
@@ -128,8 +128,8 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 								go func() {
 									ebuilder.notiCh <- struct{}{}
 								}()
+								log.Info("reconnected client")
 							}
-							log.Info("reconnected client")
 							ebuilder.client.Conn = cli
 						}
 					}
@@ -141,14 +141,18 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 						go func() {
 							ebuilder.notiCh <- struct{}{}
 						}()
+						log.Info("reconnected client")
 					}
 					ebuilder.client.Conn = cli
 					time.Sleep(20 * time.Second)
 					continue
 				}
 				time.Sleep(20 * time.Second)
-				gasStr := gas.String()
-				if ebuilder.gasprice == nil || *ebuilder.gasprice != gasStr {
+				var gasStr string
+				if gas != nil {
+					gasStr = gas.String()
+				}
+				if (ebuilder.gasprice == nil || *ebuilder.gasprice != gasStr) && gas != nil {
 					ebuilder.gasprice = &gasStr
 					log.Info("updated eth gas price to ", gasStr)
 				}

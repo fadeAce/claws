@@ -1,6 +1,8 @@
 package types
 
-import "context"
+import (
+	"context"
+)
 
 const (
 	COIN_BTC   = "btc"
@@ -67,4 +69,10 @@ type WalletInfo struct {
 }
 
 type Require struct {
+}
+
+type Option struct {
+	Nonce  uint64
+	Secret string
+	GasPrice string
 }

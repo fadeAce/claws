@@ -47,3 +47,30 @@ func TestEventBase(t *testing.T) {
 		fmt.Println(num)
 	})
 }
+
+func TestSend(t *testing.T) {
+	cfg, err := ioutil.ReadFile("./claws.yml")
+	if cfg == nil || err != nil {
+		panic("shut down with no configuration")
+		return
+	}
+	var conf types.Claws
+	err = yaml.Unmarshal(cfg, &conf)
+	// first of all setup gate
+	SetupGate(&conf, nil)
+	wallet := Builder.BuildWallet("eth")
+
+	err = wallet.Send(
+		conf.Ctx,
+		wallet.BuildBundle("", "", "0xf03a492fa3ce79d99b9613add1017448a83810f1"),
+		wallet.BuildBundle("", "", "0x4728489Fb5c35A614c4c19450B5f964E8D794075"),
+		"3000000000000000",
+		&types.Option{
+			Nonce:  33,
+			Secret: "7b9f448ae05200d686cb982bae477e174d34c72c04d0a7464aa0d987a53d37e4",
+		},
+	)
+	if err != nil {
+		fmt.Println(err)
+	}
+}

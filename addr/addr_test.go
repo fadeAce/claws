@@ -3,7 +3,8 @@ package addr
 import (
 	"context"
 	"github.com/ethereum/go-ethereum"
-	types2 "github.com/ethereum/go-ethereum/core/types"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"os"
@@ -175,16 +176,6 @@ func TestEthPendingTransaction(t *testing.T) {
 //}
 
 func TestSendEth(t *testing.T) {
-	client, err := ethclient.Dial("http://127.0.0.1:8545")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	toAddress := common.HexToAddress("FC8eFa516089C2c1Fd606914c94137a98653b676")
-
-	// make tx
-	tx := types2.NewTransaction(0, toAddress, big.NewInt(30000000000000000), 40000, big.NewInt(1000), nil)
-
 	key := new(keystore.Key)
 
 	// file testing
@@ -197,7 +188,28 @@ func TestSendEth(t *testing.T) {
 	if err := json.NewDecoder(fd).Decode(key); err != nil {
 		fmt.Println(err)
 	}
-	signTx, err := types2.SignTx(tx, &types2.HomesteadSigner{}, key.PrivateKey)
+	hex, err := hex.DecodeString("7b9f448ae05200d686cb982bae477e174d34c72c04d0a7464aa0d987a53d37e4")
+	fmt.Println(len(hex))
+	prv, err := crypto.ToECDSA(hex)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	ctx := context.TODO()
+	client, err := ethclient.Dial("ws://127.0.0.1:8546")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	toAddress := common.HexToAddress("4728489Fb5c35A614c4c19450B5f964E8D794075")
+
+	gasP, _ := client.SuggestGasPrice(ctx)
+	fmt.Println(gasP.String())
+
+	// make tx
+	tx := ethTypes.NewTransaction(28, toAddress, big.NewInt(3000000000000000), 40000, gasP, nil)
+
+	signTx, err := ethTypes.SignTx(tx, &ethTypes.HomesteadSigner{}, prv)
 	fmt.Println(signTx.Hash())
 	if err != nil {
 		fmt.Println(err)
@@ -345,7 +357,7 @@ func TestEthReceipt(t *testing.T) {
 		t.Error(err)
 	}
 	fmt.Println(r)
-	if r.Status == types2.ReceiptStatusSuccessful {
+	if r.Status == ethTypes.ReceiptStatusSuccessful {
 		fmt.Println("success !")
 	}
 }
