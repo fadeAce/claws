@@ -23,13 +23,17 @@ type ethWallet struct {
 	ctx  context.Context
 	conn *EthConn
 
-	gasPrice *string
+	gasPrice *EthGas
 
 	updateCh chan interface{}
 }
 
 type EthConn struct {
 	Conn *ethclient.Client
+}
+
+type EthGas struct {
+	GasPrice string
 }
 
 type ethBundle struct {
@@ -119,7 +123,7 @@ func (e *ethWallet) BuildBundle(
 	res := &ethBundle{
 		pub: pub,
 		prv: prv,
-		add: strings.Trim(addr," "),
+		add: strings.Trim(addr, " "),
 	}
 	return res
 }
@@ -167,7 +171,7 @@ func (e *ethWallet) Type() string {
 	return types.COIN_ETH
 }
 
-func NewEthWallet(conf *types.Claws, ctx context.Context, conn *EthConn, updateCh chan interface{}, gasPrice *string) *ethWallet {
+func NewEthWallet(conf *types.Claws, ctx context.Context, conn *EthConn, updateCh chan interface{}, gasPrice *EthGas) *ethWallet {
 	res := ethWallet{
 		conf:     conf,
 		ctx:      ctx,
@@ -243,8 +247,8 @@ func (e *ethWallet) Info() (info *types.Info) {
 // Send send txn using bundle built for given token
 func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (err error) {
 	gasP := new(big.Int)
-	if e.gasPrice != nil {
-		gasP.SetString(*e.gasPrice, 10)
+	if e.gasPrice != nil && e.gasPrice.GasPrice != "" {
+		gasP.SetString(e.gasPrice.GasPrice, 10)
 	} else {
 		// 1 Gwei
 		gasP.SetString("1000000000", 10)

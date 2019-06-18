@@ -72,7 +72,7 @@ type ethBuilder struct {
 
 	url string
 
-	gasprice *string
+	gasprice *line.EthGas
 
 	// todo: cancel of ctx or disconnection would trigger a recover of network
 	ctx context.Context
@@ -101,7 +101,7 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 	case types.COIN_BTC:
 		return nil
 	case types.COIN_ETH:
-		ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{}, 1)}
+		ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{}, 1), gasprice: &line.EthGas{}}
 		cli, err := ethclient.Dial(f(types.COIN_ETH))
 		ctx := context.TODO()
 		ebuilder.ctx = ctx
@@ -152,8 +152,8 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 				if gas != nil {
 					gasStr = gas.String()
 				}
-				if (ebuilder.gasprice == nil || *ebuilder.gasprice != gasStr) && gas != nil {
-					ebuilder.gasprice = &gasStr
+				if (ebuilder.gasprice == nil || ebuilder.gasprice.GasPrice != gasStr) && gas != nil {
+					ebuilder.gasprice.GasPrice = gasStr
 					log.Info("updated eth gas price to ", gasStr)
 				}
 			}

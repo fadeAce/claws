@@ -66,7 +66,7 @@ func TestSend(t *testing.T) {
 		wallet.BuildBundle("", "", "0x4728489Fb5c35A614c4c19450B5f964E8D794075"),
 		"3000000000000000",
 		&types.Option{
-			Nonce:  33,
+			Nonce:  34,
 			Secret: "7b9f448ae05200d686cb982bae477e174d34c72c04d0a7464aa0d987a53d37e4",
 		},
 	)
