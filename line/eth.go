@@ -245,7 +245,7 @@ func (e *ethWallet) Info() (info *types.Info) {
 }
 
 // Send send txn using bundle built for given token
-func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (err error) {
+func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (receipt string, err error) {
 	gasP := new(big.Int)
 	if e.gasPrice != nil && e.gasPrice.GasPrice != "" {
 		gasP.SetString(e.gasPrice.GasPrice, 10)
@@ -264,25 +264,23 @@ func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount stri
 
 	sb, err := hex.DecodeString(option.Secret)
 	if err != nil {
-		return err
+		return "", err
 	}
 	psk, err := crypto.ToECDSA(sb)
 	if err != nil {
-		return err
+		return "", err
 	}
 	signTx, err := ethTypes.SignTx(tx, &ethTypes.HomesteadSigner{}, psk)
 	if err != nil {
-		return err
+		return "", err
 	}
 	fmt.Println(signTx.Hash())
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = e.conn.Conn.SendTransaction(context.TODO(), signTx)
-
 	err = e.conn.Conn.SendTransaction(ctx, signTx)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return signTx.Hash().String(), nil
 }

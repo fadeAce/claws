@@ -74,5 +74,4 @@ type Require struct {
 type Option struct {
 	Nonce  uint64
 	Secret string
-	GasPrice string
 }
