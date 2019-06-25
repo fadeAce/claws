@@ -107,8 +107,6 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 		ebuilder.ctx = ctx
 		if err != nil {
 			fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
-		} else {
-			fmt.Println("create new ethereum rpc client success")
 		}
 		go func() {
 			for {

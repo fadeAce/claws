@@ -189,7 +189,7 @@ func (e *ethWallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TX
 	}
 	txs := b.Transactions()
 	for _, v := range txs {
-		f := v.GetFromUnsafe().String()
+		f := strings.ToLower(v.GetFromUnsafe().String())
 		txn := &ethTXN{
 			from:   f,
 			Hash:   v.Hash().String(),
@@ -197,7 +197,7 @@ func (e *ethWallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TX
 			amount: v.Value(),
 		}
 		if v.To() != nil {
-			txn.to = v.To().String()
+			txn.to = strings.ToLower(v.To().String())
 
 			res = append(res, txn)
 		} else {

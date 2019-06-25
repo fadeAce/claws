@@ -6,6 +6,7 @@ import (
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/go-erc20-token-transaction/gethToken"
 	"math/big"
 	"os"
 	"time"
@@ -425,4 +426,26 @@ func TestDialCtx(t *testing.T) {
 	time.Sleep(20 * time.Second)
 	fmt.Println("done", client)
 	fmt.Println(client.NetworkID(ctx))
+}
+
+func TestErc20(t *testing.T) {
+	ctx := context.TODO()
+	client, err := ethclient.DialContext(ctx, "ws://127.0.0.1:8546")
+	if err != nil {
+		fmt.Println(err)
+	}
+	if err != nil {
+		fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
+	} else {
+		fmt.Println("create new ethereum rpc client success")
+	}
+	token, err := gethToken.NewToken(common.HexToAddress("46cfe958951a137db6d055ef06ce97829c2a8139"), client)
+	if err != nil {
+		fmt.Println(err)
+	}
+	b, err := token.BalanceOf()
+	if err !=nil {
+		fmt.Println(err)
+	}
+	fmt.Println(b.String())
 }

@@ -60,7 +60,7 @@ func TestSend(t *testing.T) {
 	SetupGate(&conf, nil)
 	wallet := Builder.BuildWallet("eth")
 
-	err = wallet.Send(
+	_, err = wallet.Send(
 		conf.Ctx,
 		wallet.BuildBundle("", "", "0xf03a492fa3ce79d99b9613add1017448a83810f1"),
 		wallet.BuildBundle("", "", "0x4728489Fb5c35A614c4c19450B5f964E8D794075"),
