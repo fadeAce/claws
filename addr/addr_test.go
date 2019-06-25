@@ -3,6 +3,7 @@ package addr
 import (
 	"context"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -443,8 +444,13 @@ func TestErc20(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	b, err := token.BalanceOf()
-	if err !=nil {
+	b, err := token.BalanceOf(&bind.CallOpts{
+		Pending:     false,
+		From:        common.Address{},
+		BlockNumber: nil,
+		Context:     nil,
+	}, common.HexToAddress("0xF03A492FA3cE79D99B9613aDD1017448a83810F1"))
+	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(b.String())
