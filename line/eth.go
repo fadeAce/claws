@@ -87,7 +87,7 @@ func (eb *ethBundle) HexPrvStr() string {
 
 // return address in string
 func (eb *ethBundle) AddressStr() string {
-	return eb.add
+	return strings.ToLower(eb.add)
 }
 
 func Type() string {
@@ -107,7 +107,7 @@ func (e *ethWallet) NewAddr() types.Bundle {
 	res := &ethBundle{
 		pub: "",
 		prv: ad.HexPrvStr(),
-		add: ad.HexAddrStr(),
+		add: strings.ToLower(ad.HexAddrStr()),
 	}
 	return res
 }
