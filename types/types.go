@@ -74,4 +74,6 @@ type Require struct {
 type Option struct {
 	Nonce  uint64
 	Secret string
+	// fee here force decide the fee if it could be applied
+	FeeConfig string
 }

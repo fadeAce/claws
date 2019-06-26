@@ -259,6 +259,15 @@ func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount stri
 	amountBig := new(big.Int)
 	amountBig.SetString(amount, 10)
 
+	choice := &big.Int{}
+	// price
+	choice.SetString(option.FeeConfig, 10)
+	gwei := &big.Int{}
+	gwei.SetString("1000000000", 10)
+	// > 1Gwei
+	if choice.CmpAbs(gwei) >= 0 {
+		gasP = choice
+	}
 	// make tx 10w for txn
 	tx := ethTypes.NewTransaction(option.Nonce, toAddress, amountBig, 100000, gasP, nil)
 
