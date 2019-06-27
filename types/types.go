@@ -42,6 +42,12 @@ type TxnInfo struct {
 	TxType string
 }
 
+
+type Transaction interface {
+	Commit(ctx context.Context) error
+	Receipt() string
+}
+
 // Addr marks for interface based addr
 type Bundle interface {
 	InitAddr(pub, prv string) error

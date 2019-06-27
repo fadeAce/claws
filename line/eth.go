@@ -48,6 +48,23 @@ type ethTXN struct {
 	fee    *big.Int
 }
 
+type ethCommit struct {
+	signTx *ethTypes.Transaction
+	conn   *EthConn
+}
+
+func (ec *ethCommit) Commit(ctx context.Context) error {
+	err := ec.conn.Conn.SendTransaction(ctx, ec.signTx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ec *ethCommit) Receipt() string {
+	return ec.signTx.Hash().String()
+}
+
 func (etxn *ethTXN) HexStr() string {
 	return etxn.Hash
 }
@@ -245,7 +262,7 @@ func (e *ethWallet) Info() (info *types.Info) {
 }
 
 // Send send txn using bundle built for given token
-func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (receipt string, err error) {
+func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (receipt types.Transaction, err error) {
 	gasP := new(big.Int)
 	if e.gasPrice != nil && e.gasPrice.GasPrice != "" {
 		gasP.SetString(e.gasPrice.GasPrice, 10)
@@ -273,23 +290,22 @@ func (e *ethWallet) Send(ctx context.Context, from, to types.Bundle, amount stri
 
 	sb, err := hex.DecodeString(option.Secret)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	psk, err := crypto.ToECDSA(sb)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	signTx, err := ethTypes.SignTx(tx, &ethTypes.HomesteadSigner{}, psk)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	fmt.Println(signTx.Hash())
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = e.conn.Conn.SendTransaction(ctx, signTx)
-	if err != nil {
-		return "", err
-	}
-	return signTx.Hash().String(), nil
+	return &ethCommit{
+		signTx: signTx,
+		conn:   e.conn,
+	}, nil
 }

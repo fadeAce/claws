@@ -46,5 +46,5 @@ type Wallet interface {
 	Info() *types.Info
 
 	// send txn
-	Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (receipt string,err error)
+	Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (tx types.Transaction, err error)
 }
