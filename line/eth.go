@@ -18,6 +18,7 @@ import (
 )
 
 type ethWallet struct {
+	*sync.RWMutex
 	once sync.Once
 	conf *types.Claws
 	ctx  context.Context

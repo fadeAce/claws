@@ -2,10 +2,8 @@ package line
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/common"
 	types2 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/fadeAce/claws/types"
 	"math/big"
 	"sync"
@@ -14,10 +12,62 @@ import (
 )
 
 type erc20Wallet struct {
+	*sync.RWMutex
 	once sync.Once
 	conf *types.Claws
 	ctx  context.Context
-	conn *ethclient.Client
+	conn *Erc20Client
+}
+
+func NewERC20Wallet(conf *types.Claws, ctx context.Context, conn *Erc20Client, lock *sync.RWMutex) *erc20Wallet {
+	res := &erc20Wallet{
+		conf:    conf,
+		ctx:     ctx,
+		conn:    conn,
+		RWMutex: lock,
+	}
+	return res
+}
+
+type Erc20Client struct {
+	Conn   *ethclient.Client
+	Closed bool
+	header chan *types2.Header
+	url    string
+	ctx    context.Context
+}
+
+func NewERC20Client(ctx context.Context, url string) (client *Erc20Client, err error) {
+	obj := &Erc20Client{
+		header: make(chan *types2.Header),
+		url:    url,
+		ctx:    ctx,
+		Closed: false,
+	}
+
+	c, err1 := ethclient.Dial(url)
+	if err1 != nil {
+		return nil, err1
+	}
+
+	obj.Conn = c
+	_, err2 := c.SubscribeNewHead(ctx, obj.header)
+	return obj, err2
+}
+
+func (c *Erc20Client) Reconnect() error {
+	client, err1 := ethclient.Dial(c.url)
+	if err1 != nil {
+		return err1
+	}
+
+	c.Conn = client
+	_, err2 := client.SubscribeNewHead(c.ctx, c.header)
+	return err2
+}
+
+func (e *erc20Wallet) Send(ctx context.Context, from, to types.Bundle, amount string, option *types.Option) (tx types.Transaction, err error) {
+	panic("implement me")
 }
 
 type erc20Bundle struct {
@@ -121,83 +171,71 @@ func (e *erc20Wallet) Withdraw(addr types.Bundle) *types.TxnInfo {
 // seek for tx , keep track it
 func (e *erc20Wallet) Seek(txn types.TXN) bool {
 	// seek the txn hash of it
-	hash := txn.HexStr()
-	hs := common.HexToHash(hash)
-	reciept, err := e.conn.TransactionReceipt(e.ctx, hs)
-	if err != nil {
-		log.Error("error", err)
-		return false
-	}
-	if reciept.Status == types2.ReceiptStatusSuccessful {
-		return true
-	}
+	//hash := txn.HexStr()
+	//hs := common.HexToHash(hash)
+	//reciept, err := e.conn.TransactionReceipt(e.ctx, hs)
+	//if err != nil {
+	//	log.Error("error", err)
+	//	return false
+	//}
+	//if reciept.Status == types2.ReceiptStatusSuccessful {
+	//	return true
+	//}
 	return false
 }
 
 // seek for tx , keep track it
 func (e *erc20Wallet) Balance(bundle types.Bundle) (string, error) {
-	add := bundle.AddressStr()
-	address := common.HexToAddress(add)
-	balance, err := e.conn.BalanceAt(e.ctx, address, nil)
-	return balance.String(), err
+	//add := bundle.AddressStr()
+	//address := common.HexToAddress(add)
+	//balance, err := e.conn.BalanceAt(e.ctx, address, nil)
+	//return balance.String(), err
+	return "", nil
 }
 
 // seek for tx , keep track it
 func (e *erc20Wallet) Type() string {
-	return types.COIN_BTC
-}
-
-func Newerc20Wallet(conf *types.Claws, ctx context.Context, conn *ethclient.Client) erc20Wallet {
-	res := erc20Wallet{
-		conf: conf,
-		ctx:  ctx,
-		conn: conn,
-	}
-	return res
+	return types.COIN_ERC20
 }
 
 func (e *erc20Wallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TXN, err error) {
-	b, err := e.conn.BlockByNumber(ctx, num)
-	if err != nil {
-		return nil, err
-	}
-	txs := b.Transactions()
-	for _, v := range txs {
-		f := v.GetFromUnsafe().String()
-		txn := &erc20TXN{
-			from:   f,
-			Hash:   v.Hash().String(),
-			fee:    new(big.Int).Mul(new(big.Int).SetUint64(v.Gas()), v.GasPrice()),
-			amount: v.Value(),
-		}
-		if v.To() != nil {
-			txn.to = v.To().String()
-
-			res = append(res, txn)
-		} else {
-			txn.to = ""
-			res = append(res, txn)
-		}
-	}
-
+	//b, err := e.conn.BlockByNumber(ctx, num)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//txs := b.Transactions()
+	//for _, v := range txs {
+	//	f := v.GetFromUnsafe().String()
+	//	txn := &erc20TXN{
+	//		from:   f,
+	//		Hash:   v.Hash().String(),
+	//		fee:    new(big.Int).Mul(new(big.Int).SetUint64(v.Gas()), v.GasPrice()),
+	//		amount: v.Value(),
+	//	}
+	//	if v.To() != nil {
+	//		txn.to = v.To().String()
+	//
+	//		res = append(res, txn)
+	//	} else {
+	//		txn.to = ""
+	//		res = append(res, txn)
+	//	}
+	//}
+	//
 	return
 }
 
-func (e *erc20Wallet) NotifyHead(ctx context.Context, f func(num *big.Int)) (err error) {
-	ch := make(chan *types2.Header)
-	e.once.Do(func() {
-		_, err = e.conn.SubscribeNewHead(ctx, ch)
-		if err != nil {
-			return
-		}
-		for {
-			head := <-ch
-			f(head.Number)
-		}
-	})
-	return
-}
+func (e *erc20Wallet) NotifyHead(ctx context.Context, fn func(num *big.Int)) (err error) {
+	e.RLock()
+	defer e.RUnlock()
 
+	for {
+		h := <-e.conn.header
+		fn(h.Number)
+	}
+
+	return nil
+}
 
 func (e *erc20Wallet) Info() (info *types.Info) {
 	return &types.Info{}

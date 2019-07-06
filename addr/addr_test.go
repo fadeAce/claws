@@ -449,7 +449,7 @@ func TestErc20(t *testing.T) {
 		From:        common.Address{},
 		BlockNumber: nil,
 		Context:     nil,
-	}, common.HexToAddress("0xF03A492FA3cE79D99B9613aDD1017448a83810F1"))
+	}, common.HexToAddress("0x78aE889cd04Cb9274C2600d68CCc5058F43dB63e"))
 	if err != nil {
 		fmt.Println(err)
 	}
