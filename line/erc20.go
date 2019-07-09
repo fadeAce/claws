@@ -183,18 +183,8 @@ func (e *erc20Wallet) Withdraw(addr types.Bundle) *types.TxnInfo {
 
 // seek for tx , keep track it
 func (e *erc20Wallet) Seek(txn types.TXN) bool {
-	// seek the txn hash of it
-	//hash := txn.HexStr()
-	//hs := common.HexToHash(hash)
-	//reciept, err := e.conn.TransactionReceipt(e.ctx, hs)
-	//if err != nil {
-	//	log.Error("error", err)
-	//	return false
-	//}
-	//if reciept.Status == types2.ReceiptStatusSuccessful {
-	//	return true
-	//}
-	return false
+	receipt, err := e.conn.Conn.TransactionReceipt(context.Background(), common.HexToHash(txn.HexStr()))
+	return err == nil && receipt.Status == 1
 }
 
 // seek for tx , keep track it
@@ -264,5 +254,7 @@ func (e *erc20Wallet) NotifyHead(ctx context.Context, fn func(num *big.Int)) (er
 }
 
 func (e *erc20Wallet) Info() (info *types.Info) {
-	return &types.Info{}
+	return &types.Info{
+		Name: types.COIN_ERC20,
+	}
 }
