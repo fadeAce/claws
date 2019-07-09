@@ -18,6 +18,8 @@ type Info struct {
 	Decimal      int
 	FeeCoin      string
 	GapLimit     float64
+	// chain type name
+	Chain string
 }
 
 type Claws struct {
@@ -25,6 +27,9 @@ type Claws struct {
 	Version string `yaml:"version"`
 	// The configuration represent coin.
 	Coins []Coins `yaml:"coins"`
+
+	// chain configuration of ethereum
+	Eth *EthConf
 }
 
 type Coins struct {
@@ -44,18 +49,16 @@ type TxnInfo struct {
 	TxType string
 }
 
-type SeekInfo struct {
-}
-
-type WalletInfo struct {
-}
-
-type Require struct {
-}
-
 type Option struct {
 	Nonce  uint64
 	Secret string
 	// fee here force decide the fee if it could be applied
 	FeeConfig string
+}
+
+type EthConf struct {
+	// name used for coins mapping
+	Name string `yaml:"name"`
+	// url used for setting client in RPC
+	Url string `yaml:"url"`
 }

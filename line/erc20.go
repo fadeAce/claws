@@ -7,11 +7,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	types2 "github.com/ethereum/go-ethereum/core/types"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fadeAce/claws/types"
 	"github.com/go-erc20-token-transaction/gethToken"
-	"github.com/pkg/errors"
+
+	"errors"
 	"math/big"
 	"strings"
 	"sync"
@@ -45,14 +46,14 @@ func NewERC20Wallet(conf *types.Claws, coinCfg *types.Coins, ctx context.Context
 type Erc20Client struct {
 	Conn   *ethclient.Client
 	Closed bool
-	header chan *types2.Header
+	header chan *ethTypes.Header
 	url    string
 	ctx    context.Context
 }
 
 func NewERC20Client(ctx context.Context, url string) (client *Erc20Client, err error) {
 	obj := &Erc20Client{
-		header: make(chan *types2.Header),
+		header: make(chan *ethTypes.Header),
 		url:    url,
 		ctx:    ctx,
 		Closed: false,

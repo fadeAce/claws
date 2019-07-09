@@ -1,21 +1,55 @@
 version: 0.0.1
 
+# chains configured here represent eth chain support, maybe a multiple url in the future.
+chain_ethereum:
+  url: ws://127.0.0.1:8546
+  name: eth
+
 coins:
-   -
-      fee: 21000
-      fee_coin: eth
-      full_name: ethereum
-      short_name: eth
-      type: eth
-      decimal: 0
-      url: ws://127.0.0.1:8546
-      interval: 30
-   -
-      fee: 33
-      fee_coin: btc
-      full_name: bitcoin
-      short_name: btc
-      type: btc
-      decimal: 0
-      url: ws://127.0.0.1:18332
-      interval: 600
+  - fee: 21000
+    fee_coin: eth
+    full_name: ethereum
+    short_name: eth
+    type: eth
+    decimal: 0
+    url: ws://127.0.0.1:8546
+    interval: 30
+    chain: ethereum
+  - fee: 33
+    fee_coin: btc
+    full_name: marble
+    short_name: btc
+    type: btc
+    decimal: 0
+    url: ws://127.0.0.1:18332
+    interval: 600
+    chain: ethereum
+#   -
+#      fee: 33
+#      fee_coin: btc
+#      full_name: bitcoin
+#      short_name: btc
+#      type: btc
+#      decimal: 0
+#      url: ws://127.0.0.1:18332
+#      interval: 600
+
+
+
+
+## fee represent fee in big.int
+# fee: 10000
+## fee_coin represent fee coin type
+# fee_coin: eth
+## full_name represent coin full name
+# full_name: ether
+## fee represent fee in big.int
+# fee: 10000
+## fee represent fee in big.int
+# fee: 10000
+## fee represent fee in big.int
+# fee: 10000
+## fee represent fee in big.int
+# fee: 10000
+## fee represent fee in big.int
+# fee: 10000
