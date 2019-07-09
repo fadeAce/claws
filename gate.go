@@ -97,7 +97,8 @@ type erc20Builder struct {
 
 func (e *erc20Builder) Build() Wallet {
 	ctx := e.ctx
-	erc20Wallet := line.NewERC20Wallet(e.config, ctx, e.client, e.RWMutex)
+	coinCfg := getChainConf("erc20", e.config)
+	erc20Wallet := line.NewERC20Wallet(e.config, coinCfg, ctx, e.client, e.RWMutex)
 	return erc20Wallet
 }
 

@@ -2,10 +2,18 @@ package line
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	types2 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fadeAce/claws/types"
+	"github.com/go-erc20-token-transaction/gethToken"
+	"github.com/pkg/errors"
 	"math/big"
+	"strings"
 	"sync"
 
 	"github.com/fadeAce/claws/addr"
@@ -13,18 +21,23 @@ import (
 
 type erc20Wallet struct {
 	*sync.RWMutex
-	once sync.Once
-	conf *types.Claws
-	ctx  context.Context
-	conn *Erc20Client
+	once    sync.Once
+	conf    *types.Claws
+	coinCfg *types.Coins
+	ctx     context.Context
+	conn    *Erc20Client
+	abi     abi.ABI
 }
 
-func NewERC20Wallet(conf *types.Claws, ctx context.Context, conn *Erc20Client, lock *sync.RWMutex) *erc20Wallet {
+func NewERC20Wallet(conf *types.Claws, coinCfg *types.Coins, ctx context.Context, conn *Erc20Client, lock *sync.RWMutex) *erc20Wallet {
+	myabi, _ := abi.JSON(strings.NewReader(gethToken.TokenABI))
 	res := &erc20Wallet{
 		conf:    conf,
 		ctx:     ctx,
 		conn:    conn,
 		RWMutex: lock,
+		coinCfg: coinCfg,
+		abi:     myabi,
 	}
 	return res
 }
@@ -186,11 +199,24 @@ func (e *erc20Wallet) Seek(txn types.TXN) bool {
 
 // seek for tx , keep track it
 func (e *erc20Wallet) Balance(bundle types.Bundle) (string, error) {
-	//add := bundle.AddressStr()
-	//address := common.HexToAddress(add)
-	//balance, err := e.conn.BalanceAt(e.ctx, address, nil)
-	//return balance.String(), err
-	return "", nil
+	if e.conn.Closed {
+		return "", errors.New("internal error")
+	}
+
+	token, err := gethToken.NewToken(common.HexToAddress(e.coinCfg.ContractAddr), e.conn.Conn)
+	if err != nil {
+		fmt.Println(err)
+	}
+	b, err := token.BalanceOf(&bind.CallOpts{
+		Pending:     false,
+		From:        common.Address{},
+		BlockNumber: nil,
+		Context:     nil,
+	}, common.HexToAddress(bundle.AddressStr()))
+	if err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }
 
 // seek for tx , keep track it
@@ -199,42 +225,42 @@ func (e *erc20Wallet) Type() string {
 }
 
 func (e *erc20Wallet) UnfoldTxs(ctx context.Context, num *big.Int) (res []types.TXN, err error) {
-	//b, err := e.conn.BlockByNumber(ctx, num)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//txs := b.Transactions()
-	//for _, v := range txs {
-	//	f := v.GetFromUnsafe().String()
-	//	txn := &erc20TXN{
-	//		from:   f,
-	//		Hash:   v.Hash().String(),
-	//		fee:    new(big.Int).Mul(new(big.Int).SetUint64(v.Gas()), v.GasPrice()),
-	//		amount: v.Value(),
-	//	}
-	//	if v.To() != nil {
-	//		txn.to = v.To().String()
-	//
-	//		res = append(res, txn)
-	//	} else {
-	//		txn.to = ""
-	//		res = append(res, txn)
-	//	}
-	//}
-	//
-	return
+	block, err := e.conn.Conn.BlockByNumber(ctx, num)
+	if err != nil {
+		return nil, err
+	}
+	res = make([]types.TXN, 0)
+	for _, item := range block.Transactions() {
+		if strings.ToLower(item.To().String()) != e.coinCfg.ContractAddr {
+			continue
+		}
+
+		gas := new(big.Int).SetUint64(item.Gas())
+		to, value := e.unpackTransfer(item.Data())
+		tx := &erc20TXN{
+			from:   strings.ToLower(item.GetFromUnsafe().String()),
+			Hash:   item.Hash().String(),
+			fee:    new(big.Int).Mul(gas, item.GasPrice()),
+			to:     to,
+			amount: value,
+		}
+		res = append(res, tx)
+	}
+	return res, nil
+}
+
+func (e *erc20Wallet) unpackTransfer(data []byte) (to string, value *big.Int) {
+	to = hex.EncodeToString(data[16:36])
+	amount := new(big.Int).SetBytes(data[36:])
+	return to, amount
 }
 
 func (e *erc20Wallet) NotifyHead(ctx context.Context, fn func(num *big.Int)) (err error) {
-	e.RLock()
-	defer e.RUnlock()
-
 	for {
 		h := <-e.conn.header
 		fn(h.Number)
 	}
-
-	return nil
+	return
 }
 
 func (e *erc20Wallet) Info() (info *types.Info) {

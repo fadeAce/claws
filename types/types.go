@@ -33,6 +33,8 @@ type Coins struct {
 	// RPC location is configured to wallet builder
 	// like 127.0.0.1:8545
 	Url string `yml:"url"`
+
+	ContractAddr string `yml:"contract_addr"`
 }
 
 type TxnInfo struct {
