@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/fadeAce/claws/chain"
 	"github.com/fadeAce/claws/types"
 	"math/big"
 	"strings"
@@ -22,20 +23,20 @@ type ethWallet struct {
 	once sync.Once
 	conf *types.Claws
 	ctx  context.Context
-	conn *EthConn
+	conn *chain.EthConn
 
-	gasPrice *EthGas
+	gasPrice *chain.EthGas
 
 	updateCh chan interface{}
 }
 
-type EthConn struct {
-	Conn *ethclient.Client
-}
-
-type EthGas struct {
-	GasPrice string
-}
+//type EthConn struct {
+//	Conn *ethclient.Client
+//}
+//
+//type EthGas struct {
+//	GasPrice string
+//}
 
 type ethBundle struct {
 	pub, prv, add string
@@ -51,7 +52,7 @@ type ethTXN struct {
 
 type ethCommit struct {
 	signTx *ethTypes.Transaction
-	conn   *EthConn
+	conn   *chain.EthConn
 }
 
 func (ec *ethCommit) Commit(ctx context.Context) error {
@@ -130,8 +131,8 @@ func (e *ethWallet) NewAddr() types.Bundle {
 	return res
 }
 
-func NewConn(client *ethclient.Client) *EthConn {
-	return &EthConn{client}
+func NewConn(client *ethclient.Client) *chain.EthConn {
+	return &chain.EthConn{client}
 }
 
 // return new addr
@@ -189,7 +190,7 @@ func (e *ethWallet) Type() string {
 	return types.COIN_ETH
 }
 
-func NewEthWallet(conf *types.Claws, ctx context.Context, conn *EthConn, updateCh chan interface{}, gasPrice *EthGas) *ethWallet {
+func NewEthWallet(conf *types.Claws, ctx context.Context, conn *chain.EthConn, updateCh chan interface{}, gasPrice *chain.EthGas) *ethWallet {
 	res := ethWallet{
 		conf:     conf,
 		ctx:      ctx,

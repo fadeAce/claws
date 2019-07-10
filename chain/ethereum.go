@@ -7,9 +7,19 @@ import (
 
 type Ethereum struct {
 	Conf   *types.EthConf
-	Client *EthereumClient
+	Client *EthConn
+
+	gasprice *EthGas
+
+	// notiCh notify all updates
+	notiCh chan interface{}
 }
 
-type EthereumClient struct {
+
+type EthConn struct {
 	Conn *ethclient.Client
+}
+
+type EthGas struct {
+	GasPrice string
 }

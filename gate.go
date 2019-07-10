@@ -47,6 +47,12 @@ func (b *builder) BuildWallet(typ string) Wallet {
 
 // this is based on cfg itself, it would load all config to make intersection with code pre-define
 func SetupGate(conf *types.Claws, wildcard map[string]WalletBuilder) {
+
+	// setup ETH chain
+	setupETH(conf.Eth)
+
+	//setup btc .. eos .. etc
+
 	rep := make(map[string]WalletBuilder)
 	for _, v := range conf.Coins {
 		var builder WalletBuilder
@@ -63,7 +69,7 @@ func SetupGate(conf *types.Claws, wildcard map[string]WalletBuilder) {
 	// make up builder map with a brand new copy
 	Builder.builder = rep
 
-	if conf.Eth!=nil {
+	if conf.Eth != nil {
 		Builder.EthChain = &chain.Ethereum{
 			Conf:   conf.Eth,
 			Client: nil,
@@ -78,11 +84,11 @@ type ethBuilder struct {
 	config *types.Claws
 
 	// connection to nodes
-	client *line.EthConn
+	client *chain.EthConn
 
 	url string
 
-	gasprice *line.EthGas
+	gasprice *chain.EthGas
 
 	// todo: cancel of ctx or disconnection would trigger a recover of network
 	ctx context.Context
@@ -101,7 +107,7 @@ type erc20Builder struct {
 	config   *types.Claws
 	client   *line.Erc20Client
 	url      string
-	gasprice *line.EthGas
+	gasprice *chain.EthGas
 	ctx      context.Context
 	notiCh   chan interface{}
 }
@@ -123,6 +129,65 @@ func getChainConf(typ string, conf *types.Claws) *types.Coins {
 	return nil
 }
 
+func setupETH(conf *types.EthConf) {
+	////ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{}, 1), gasprice: &chain.EthGas{}}
+	//cli, err := ethclient.Dial(conf.Url)
+	//ctx := context.TODO()
+	//if err != nil {
+	//	fmt.Printf("create new ethereum rpc client err:%s\n", err.Error())
+	//}
+	//go func() {
+	//	for {
+	//		cli = Builder.EthChain.Client.Conn
+	//		var gas *big.Int
+	//		if cli != nil {
+	//			gas, err = cli.SuggestGasPrice(ctx)
+	//			if err != nil {
+	//				fmt.Println(err.Error())
+	//				if strings.Contains(err.Error(), "closed") ||
+	//					strings.Contains(err.Error(), "network connection") {
+	//					// reconnect here
+	//					cli, err = ethclient.Dial(conf.Url)
+	//					if err != nil {
+	//						log.Error().Msg("error when reconnect source URL")
+	//					} else {
+	//						go func() {
+	//							Builder.EthChain.notiCh <- struct{}{}
+	//						}()
+	//						log.Info().Msg("reconnected client")
+	//					}
+	//					ebuilder.client.Conn = cli
+	//				}
+	//			}
+	//		} else {
+	//			cli, err = ethclient.Dial(conf.Url)
+	//			if err != nil {
+	//				log.Error().Msg("error when reconnect source URL")
+	//			} else {
+	//				go func() {
+	//					ebuilder.notiCh <- struct{}{}
+	//				}()
+	//				log.Info().Msg("reconnected client")
+	//			}
+	//			ebuilder.client.Conn = cli
+	//			time.Sleep(20 * time.Second)
+	//			continue
+	//		}
+	//		time.Sleep(20 * time.Second)
+	//		var gasStr string
+	//		if gas != nil {
+	//			gasStr = gas.String()
+	//		}
+	//		if (ebuilder.gasprice == nil || ebuilder.gasprice.GasPrice != gasStr) && gas != nil {
+	//			ebuilder.gasprice.GasPrice = gasStr
+	//			log.Info().Msgf("updated eth gas price to %s", gasStr)
+	//		}
+	//	}
+	//}()
+	//
+	//ebuilder.client = &chain.EthConn{cli}
+}
+
 // there is a list of coins to be initiated which make up the settings
 func setupGate(typ string, conf *types.Claws) WalletBuilder {
 	// f returns the URL represented RPC node
@@ -138,7 +203,7 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 	case types.COIN_BTC:
 		return nil
 	case types.COIN_ETH:
-		ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{}, 1), gasprice: &line.EthGas{}}
+		ebuilder := &ethBuilder{config: conf, notiCh: make(chan interface{}, 1), gasprice: &chain.EthGas{}}
 		cli, err := ethclient.Dial(f(types.COIN_ETH))
 		ctx := context.TODO()
 		ebuilder.ctx = ctx
@@ -194,7 +259,7 @@ func setupGate(typ string, conf *types.Claws) WalletBuilder {
 			}
 		}()
 
-		ebuilder.client = &line.EthConn{cli}
+		ebuilder.client = &chain.EthConn{cli}
 		return ebuilder
 	case types.COIN_ERC20:
 		return newErc20Builder(context.Background(), conf)
@@ -207,7 +272,7 @@ func newErc20Builder(ctx context.Context, conf *types.Claws) WalletBuilder {
 	erc20_builder := &erc20Builder{
 		config:   conf,
 		notiCh:   make(chan interface{}, 1),
-		gasprice: &line.EthGas{},
+		gasprice: &chain.EthGas{},
 		RWMutex:  &sync.RWMutex{},
 	}
 
