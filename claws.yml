@@ -14,7 +14,7 @@ coins:
     decimal: 0
     url: ws://127.0.0.1:8546
     interval: 30
-    chain: ethereum
+    chain: eth
   - fee: 33
     fee_coin: btc
     full_name: marble
@@ -23,7 +23,7 @@ coins:
     decimal: 0
     url: ws://127.0.0.1:18332
     interval: 600
-    chain: ethereum
+    chain: eth
 #   -
 #      fee: 33
 #      fee_coin: btc

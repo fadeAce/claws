@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/fadeAce/claws/chain"
 	"github.com/fadeAce/claws/line"
 	"github.com/fadeAce/claws/types"
 	"github.com/rs/zerolog/log"
@@ -25,6 +26,8 @@ var Builder = func() *builder {
 type builder struct {
 	builder map[string]WalletBuilder
 	mu      sync.RWMutex
+	// chain configurations here
+	EthChain *chain.Ethereum
 }
 
 type WalletBuilder interface {
@@ -59,6 +62,14 @@ func SetupGate(conf *types.Claws, wildcard map[string]WalletBuilder) {
 	}
 	// make up builder map with a brand new copy
 	Builder.builder = rep
+
+	if conf.Eth!=nil {
+		Builder.EthChain = &chain.Ethereum{
+			Conf:   conf.Eth,
+			Client: nil,
+		}
+	}
+
 	conf.Ctx = context.TODO()
 }
 

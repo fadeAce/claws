@@ -1,9 +1,12 @@
 package chain
 
-import "github.com/ethereum/go-ethereum/ethclient"
+import (
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/fadeAce/claws/types"
+)
 
 type Ethereum struct {
-	Url    string
+	Conf   *types.EthConf
 	Client *EthereumClient
 }
 

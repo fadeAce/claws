@@ -29,7 +29,7 @@ type Claws struct {
 	Coins []Coins `yaml:"coins"`
 
 	// chain configuration of ethereum
-	Eth *EthConf
+	Eth *EthConf `yaml:"chain_ethereum"`
 }
 
 type Coins struct {
